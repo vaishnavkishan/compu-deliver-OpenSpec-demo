@@ -75,3 +75,6 @@ decisions), and **tasks** (the implementation checklist).
 
 > **Note:** No tech stack was mentioned in the prompt above, so the AI agent assumed one on its own
 > when generating these artifacts. This will be changed in upcoming steps.
+
+> **Note:** OpenSpec has no equivalent of Spec Kit's constitution command. Project conventions and
+> guardrails live in `CLAUDE.md` and in the `spec.md` files instead.
