@@ -11,18 +11,18 @@ TLDR;
 
 ```mermaid
 graph LR
-    subgraph NEW["new requirement"]
+    subgraph NEW["1. new requirement"]
         direction LR
-        A["\explore"] --> B["\propose"]
+        A["explore"] --> B["propose"]
     end
 
-    B --> C["\apply"]
-    B -.-> U["\update (optional)"]
+    B --> C["3. apply"]
+    B -.-> U["2. update (optional)"]
     U -.-> C
-    C --> V["\update (optional)"]
+    C --> V["4. update (optional)"]
     V -.->|loop| C
-    C --> D["\sync"]
-    D --> E["\archive"]
+    C --> D["5. sync"]
+    D --> E["6. archive"]
 
     style NEW fill:none,stroke:#555,stroke-width:2px,stroke-dasharray: 5 5
     style A fill:#e1f5ff
@@ -69,8 +69,11 @@ Select Claude Code when prompted. Generates:
 
 ### 1. Explore the idea (`/opsx:explore`, branch 01-openspec-explore-and-propose)
 
-Thinking-partner mode: an in-memory step that helps clarify requirements. It does not generate any
-artifacts; it only feeds the propose stage that follows.
+**Why:** A vague idea makes a weak spec. Exploring first surfaces gaps, edge cases and trade-offs
+before anything is written down, so the proposal starts from clear requirements.
+
+**What:** Thinking-partner mode: an in-memory step that helps clarify requirements. It does not
+generate any artifacts; it only feeds the propose stage that follows.
 
 ```
 /opsx:explore We need a system that accepts bulk hardware orders from enterprise clients, calculates their final net totals using pre-negotiated contract discounts, and tracks each order through its lifecycle from intake to final delivery. Clients should be able to view their order history or cancel active requests.
@@ -96,12 +99,17 @@ decisions), and **tasks** (the implementation checklist).
 
 ### 2. Update the change (`/opsx:update`, branch 02-openspec-update-requirement)
 
-Revises the existing planning artifacts (proposal, specs, design, tasks) and keeps them coherent with
-one another. It never edits code. It is run twice here, once per sub step below.
+**Why:** The first proposal is rarely final. Requirements shift and the AI may have assumed things
+you never said. Updating the plan before coding is cheaper than fixing code later.
+
+**What:** Revises the existing planning artifacts (proposal, specs, design, tasks) and keeps them
+coherent with one another. It never edits code. It is run twice here, once per sub step below.
 
 #### 2.1 Figma design (git commit c71b72f)
 
-Folds the UI/UX from the exported Figma HTML in `figma-designs/` into the `bulk-hardware-orders`
+**Why:** The propose step had no visual reference, so the UI would have been guesswork.
+
+**What:** Folds the UI/UX from the exported Figma HTML in `figma-designs/` into the `bulk-hardware-orders`
 change, so the implementation matches the design.
 
 ```
@@ -110,8 +118,11 @@ change, so the implementation matches the design.
 
 #### 2.2 Tech stack (git commit e200959)
 
-Replaces the tech stack the AI assumed during propose with an explicit one, and sets what is in and
-out of scope.
+**Why:** The AI picked a stack on its own during propose. Stating the stack and scope explicitly
+keeps the design and tasks aligned with what the team actually uses.
+
+**What:** Replaces the tech stack the AI assumed during propose with an explicit one, and sets what
+is in and out of scope.
 
 ```
 /opsx:update Stack:
@@ -137,7 +148,10 @@ Out of Scope (Future):
 
 ### 3. Apply the change (`/opsx:apply`, branch 03-openspec-apply)
 
-Turns the finished plan into working code. It implements the tasks in
+**Why:** With the plan settled, the spec should drive the code, not the other way around. Working
+from the task list keeps the implementation traceable to the requirements.
+
+**What:** Turns the finished plan into working code. It implements the tasks in
 `openspec/changes/bulk-hardware-orders/tasks.md` one by one and ticks each off as it goes, so the
 code follows the spec instead of drifting from it. The code lives in `api/` (Spring Boot) and
 `portal/` (React).
@@ -154,14 +168,20 @@ To save context tokens, you can apply one task group at a time by naming it in t
 
 ### 4. Update after implementation (`/opsx:update`, branch 04-update-improvements)
 
-Even after the change is fully implemented, `/opsx:update` can fold a new requirement back into the
-planning artifacts. It never edits code: it proposes revisions across the proposal, specs, design and
-tasks, and adds new unchecked tasks, so a later `/opsx:apply` carries only the delta into code. It is
-run twice here, once per sub step below.
+**Why:** Requirements keep arriving after the first implementation. Updating the spec first keeps
+the specs and code in sync instead of letting code changes go undocumented.
+
+**What:** Even after the change is fully implemented, `/opsx:update` can fold a new requirement back
+into the planning artifacts. It never edits code: it proposes revisions across the proposal, specs,
+design and tasks, and adds new unchecked tasks, so a later `/opsx:apply` carries only the delta into
+code. It is run twice here, once per sub step below.
 
 #### 4.1 Edit order while SUBMITTED (git commit 69f56d0)
 
-Adds order editing to the plan as new tasks (group 11 in `tasks.md`).
+**Why:** Clients need to correct an order before it is processed, which the original spec did not
+allow.
+
+**What:** Adds order editing to the plan as new tasks (group 11 in `tasks.md`).
 
 ```
 /opsx:update The order should be allowed to be edited. Edit is only allowed when the order is in Intake stage.
@@ -175,8 +195,10 @@ Then `/opsx:apply` was run with no message to carry the new delta into code (git
 
 #### 4.2 Operator order details (git commit 5086d7a)
 
-Adds a read-only order detail view for the Warehouse Operator to the plan as new tasks (group 12 in
-`tasks.md`), and touches the related tasks 5.3 and 8.6.
+**Why:** Operators could advance orders but had no way to see what an order contained.
+
+**What:** Adds a read-only order detail view for the Warehouse Operator to the plan as new tasks
+(group 12 in `tasks.md`), and touches the related tasks 5.3 and 8.6.
 
 ```
 /opsx:update Allow warehouse operators to view order details
