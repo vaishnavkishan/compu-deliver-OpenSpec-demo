@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Lets enterprise clients review their own past and active orders and cancel orders that have not yet entered processing, while giving Invoice Department a read-only view of all orders.
+Lets enterprise clients review their own past and active orders and cancel orders that have not yet entered processing.
 
 ## ADDED Requirements
 
@@ -43,13 +43,6 @@ The system SHALL allow an Enterprise Client to cancel their own order only while
 #### Scenario: Cancel another client's order
 - **WHEN** a client tries to cancel an order belonging to a different client
 - **THEN** the request is rejected and the order is unchanged
-
-### Requirement: Invoice Department read-only view
-The system SHALL show the Invoice Department role a read-only list of all orders across clients, including status and pricing snapshot, with no actions available.
-
-#### Scenario: All orders visible
-- **WHEN** the Invoice Department role is active
-- **THEN** orders from every client are listed with status and pricing
 
 ### Requirement: Client dashboard layout
 The system SHALL show the Enterprise Client an "Active Procurement Tracker" with a count pill and one card per non-terminal order (id, date, units, net total, stepper, view link, and a cancel button only when cancellation is allowed), followed by an "Order History Log" table of `DELIVERED` and `CANCELLED` orders, as in `figma-designs/enterprise-user-dashboard.html`. A "+ Create New Order" action SHALL open the order form.
