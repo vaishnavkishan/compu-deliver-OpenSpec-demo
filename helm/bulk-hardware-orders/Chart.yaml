@@ -1,0 +1,5 @@
+apiVersion: v2
+name: bulk-hardware-orders
+description: Bulk hardware orders - API, portal, PostgreSQL and RabbitMQ
+version: 0.1.0
+appVersion: "0.1.0"
