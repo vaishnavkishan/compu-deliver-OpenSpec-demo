@@ -26,7 +26,7 @@
 
 - [x] 5.1 Implement the ordered `OrderStatus` transition rule and `POST /orders/{id}/advance` for Warehouse Operator only; verify tests for valid, skip, backward, terminal, and non-operator-rejected cases, with a history row and timestamp per transition
 - [x] 5.2 Record the initial `SUBMITTED` history entry at intake and return history with order detail; verify with tests
-- [x] 5.3 Implement `GET /orders` (client: own only, Warehouse Operator: all) and `GET /orders/{id}` with client scoping; verify tests that client A cannot see client B's orders and that an empty history succeeds
+- [x] 5.3 Implement `GET /orders` (client: own only, Warehouse Operator: all) and `GET /orders/{id}` with client scoping (Warehouse Operator: any order, see 12.1); verify tests that client A cannot see client B's orders and that an empty history succeeds
 
 ## 6. Cancellation and concurrency
 
@@ -47,7 +47,7 @@ Reference: the Enterprise Client mockups in `figma-designs/` and the "UI/UX Refe
 - [x] 8.3 Build shared pieces: five-step stepper (pulsing current step, cancelled banner), status badges with the specified colors, toast, and confirmation modal; verify with component tests for each status
 - [x] 8.4 Build the Enterprise Client dashboard: "+ Create New Order", Active Procurement Tracker with count pill and cards, Order History Log table, and cancel via modal; verify against `enterprise-user-dashboard.html`, including the empty state and that cancel appears only for `SUBMITTED` or `CONFIRMED`
 - [x] 8.5 Build the order form and order detail view: product search picker, quantity, subtotal, remove, add line, sticky Contract Net Pricing panel (freight shown as Waived), read-only detail with transition timestamps; verify against `enterprise-user-detail-page.html` and that API errors (no contract, invalid line) show as toasts
-- [x] 8.6 Build the minimal Warehouse Operator view (queue table of all orders with search and count pill, status badges, and an "Advance" button on non-terminal rows), styled like `warehouse-ops-dashboard.html` without tagging, shipping, or fulfilment features; verify with RTL tests and manually that advancing moves an order one step, no advance button shows on `DELIVERED` or `CANCELLED`, no cancel control appears, and a 409 shows as a toast
+- [x] 8.6 Build the minimal Warehouse Operator view (queue table of all orders with search and count pill, status badges, an "Advance" button on non-terminal rows, and a "View" link per row to the operator detail view, see 12.2), styled like `warehouse-ops-dashboard.html` without tagging, shipping, or fulfilment features; verify with RTL tests and manually that advancing moves an order one step, no advance button shows on `DELIVERED` or `CANCELLED`, no cancel control appears, and a 409 shows as a toast
 
 ## 9. Packaging and deployment
 
@@ -65,3 +65,8 @@ Reference: the Enterprise Client mockups in `figma-designs/` and the "UI/UX Refe
 - [x] 11.2 Publish `OrderUpdated` (routing key `order.updated`) from an `AFTER_COMMIT` listener and bind a verification queue; verify tests for one message on success, none for rejected edits, and none on rollback
 - [x] 11.3 Verify an edit racing with advance or cancel yields one success and one 409, and that advancing to `CONFIRMED` makes later edits fail
 - [x] 11.4 Add the "Edit Order" button (only on `SUBMITTED` orders), prefilled editable form and "Save Changes" in the order page, and show edit timestamps in the history; verify with RTL tests that the button is absent for other statuses and that API errors show as toasts
+
+## 12. Operator order details
+
+- [ ] 12.1 Allow `WAREHOUSE_OPERATOR` on `GET /orders/{id}` for any order (client scoping unchanged) and include the client name in the response; verify tests for operator access to any client's order, client A still blocked from client B's order, and 404 for an unknown id
+- [ ] 12.2 Add a "View" link on Warehouse Operator queue rows and a read-only operator detail view (stepper, lines, pricing snapshot, transition timestamps, client; no Edit or Cancel controls; Advance only on non-terminal orders); verify with RTL tests and manually

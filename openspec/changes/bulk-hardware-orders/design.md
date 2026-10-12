@@ -53,7 +53,7 @@ Greenfield repo: no application code and no existing specs. See proposal.md for 
 
 A client with `discount_bp` NULL has no contract, and intake rejects it. The seed includes one such client so that path can be demonstrated.
 
-**API shape (sketch):** `POST /orders`, `PUT /orders/{id}` (client, edit while `SUBMITTED`), `GET /orders` (client: own, operator: all), `GET /orders/{id}`, `POST /orders/{id}/cancel` (client), `POST /orders/{id}/advance` (operator), `GET /clients`, `GET /products`, plus Actuator health and springdoc OpenAPI docs. Responses use clear 4xx errors for rule violations (400 invalid, 403 wrong role or other client's order, 409 invalid transition or version conflict).
+**API shape (sketch):** `POST /orders`, `PUT /orders/{id}` (client, edit while `SUBMITTED`), `GET /orders` (client: own, operator: all), `GET /orders/{id}` (client: own only, operator: any), `POST /orders/{id}/cancel` (client), `POST /orders/{id}/advance` (operator), `GET /clients`, `GET /products`, plus Actuator health and springdoc OpenAPI docs. Responses use clear 4xx errors for rule violations (400 invalid, 403 wrong role or other client's order, 409 invalid transition or version conflict).
 
 **Deployment.** The API and the portal each get a multi-stage Dockerfile. One Helm chart deploys the API, portal, PostgreSQL and RabbitMQ to k3s; the API uses Actuator liveness and readiness probes.
 
@@ -72,7 +72,7 @@ The visual reference is the static mockups in `figma-designs/` (`enterprise-user
 
 **Role-gated shell:** the Role dropdown lists Enterprise Client, Warehouse Operator and Invoice Department. Selecting Invoice Department shows a "coming soon" placeholder view with no actions.
 
-**Warehouse Operator view (minimal):** the mockup's queue table of all orders (id, client, date, volume, net total, status badge) with a search box and count pill, and an "Advance" button on each non-terminal row showing the next status. No tagging, carrier, ship gate or fulfilment UI. Outcomes and errors (e.g. 409) appear as toasts.
+**Warehouse Operator view (minimal):** the mockup's queue table of all orders (id, client, date, volume, net total, status badge) with a search box and count pill, and an "Advance" button on each non-terminal row showing the next status, plus a link to a read-only order detail page (reusing the order detail layout, with the client name added and no Edit or Cancel controls). No tagging, carrier, ship gate or fulfilment UI. Outcomes and errors (e.g. 409) appear as toasts.
 
 **Status badge colors:** Submitted blue, Confirmed sky, Processing amber, Shipped indigo, Delivered emerald, Cancelled red.
 

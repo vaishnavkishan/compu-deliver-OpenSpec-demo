@@ -13,6 +13,7 @@ Enterprise clients buy hardware in bulk under pre-negotiated contract discounts,
 - Allow an Enterprise Client to cancel an order only while it is `SUBMITTED` or `CONFIRMED` (instant, no fee). `CANCELLED` and `DELIVERED` are terminal.
 - Allow an Enterprise Client to view their own order history only.
 - Allow an Enterprise Client to edit the lines of their own order only while it is `SUBMITTED` (the Intake step). Pricing is recomputed from the current contract and prices, replacing the snapshot, and an `OrderUpdated` event is published after commit. Once the order leaves `SUBMITTED` it can no longer be edited.
+- Allow a Warehouse Operator to open a read-only detail view of any order (client, lines, pricing snapshot, status, transition timestamps).
 - Add a role-gated portal shell (no authentication): Enterprise Client (with a second selector for the seeded client) and a minimal Warehouse Operator view (all orders, advance status only) are functional. Invoice Department appears as an unavailable future role.
 - Seed mock data standing in for an external system: clients with discount percentages, and products with unit prices.
 
