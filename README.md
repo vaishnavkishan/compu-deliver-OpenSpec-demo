@@ -162,6 +162,12 @@ tasks, and adds new unchecked tasks, so a later `/opsx:apply` carries only the d
 /opsx:update The order should be allowed to be edited. Edit is only allowed when the order is in Intake stage.
 ```
 
+Then `/opsx:apply` was run with no message to carry the new delta into code:
+
+```
+/opsx:apply
+```
+
 ## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.
