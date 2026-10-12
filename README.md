@@ -173,13 +173,19 @@ Then `/opsx:apply` was run with no message to carry the new delta into code (git
 /opsx:apply
 ```
 
-#### 4.2 Operator order details
+#### 4.2 Operator order details (git commit 5086d7a)
 
 Adds a read-only order detail view for the Warehouse Operator to the plan as new tasks (group 12 in
-`tasks.md`), and touches the related tasks 5.3 and 8.6. Not applied to code yet.
+`tasks.md`), and touches the related tasks 5.3 and 8.6.
 
 ```
 /opsx:update Allow warehouse operators to view order details
+```
+
+Then `/opsx:apply` was run with no message to carry the new delta into code (git commit 52af2e1):
+
+```
+/opsx:apply
 ```
 
 ## Run locally (development)
