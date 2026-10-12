@@ -1,0 +1,51 @@
+# Spec Delta
+
+## Purpose
+
+Tracks each order from intake to final delivery through a fixed set of statuses, advanced by the Warehouse Operator, with a recorded history of transitions.
+
+## ADDED Requirements
+
+### Requirement: Order statuses
+The system SHALL track each order with exactly one status from: `SUBMITTED`, `CONFIRMED`, `PROCESSING`, `SHIPPED`, `DELIVERED`, `CANCELLED`. `DELIVERED` and `CANCELLED` SHALL be terminal.
+
+#### Scenario: Terminal states
+- **WHEN** an order is `DELIVERED` or `CANCELLED`
+- **THEN** no further status change is permitted
+
+### Requirement: Warehouse Operator advances status
+The system SHALL allow a Warehouse Operator to advance an order forward exactly one step along `SUBMITTED > CONFIRMED > PROCESSING > SHIPPED > DELIVERED`.
+
+#### Scenario: Valid advance
+- **WHEN** a Warehouse Operator advances a `CONFIRMED` order
+- **THEN** the order status becomes `PROCESSING`
+
+#### Scenario: Skipping a step rejected
+- **WHEN** a Warehouse Operator tries to move a `SUBMITTED` order directly to `SHIPPED`
+- **THEN** the change is rejected and the status is unchanged
+
+#### Scenario: Backward move rejected
+- **WHEN** a Warehouse Operator tries to move a `SHIPPED` order back to `PROCESSING`
+- **THEN** the change is rejected and the status is unchanged
+
+#### Scenario: Advance past terminal rejected
+- **WHEN** a Warehouse Operator tries to advance a `DELIVERED` or `CANCELLED` order
+- **THEN** the change is rejected and the status is unchanged
+
+### Requirement: Warehouse Operator cannot cancel
+The system SHALL NOT allow a Warehouse Operator to cancel an order.
+
+#### Scenario: No cancel for operator
+- **WHEN** the Warehouse Operator role is active
+- **THEN** no cancel action is available and a cancel request is rejected
+
+### Requirement: Transition history
+The system SHALL record a timestamp for every status transition, including the initial `SUBMITTED` status and cancellation, and SHALL make this history visible with the order.
+
+#### Scenario: Timestamp recorded
+- **WHEN** an order moves from `CONFIRMED` to `PROCESSING`
+- **THEN** the order's history contains a `PROCESSING` entry with the time of the change
+
+#### Scenario: Initial entry
+- **WHEN** an order is placed
+- **THEN** its history contains a `SUBMITTED` entry with the time of intake
