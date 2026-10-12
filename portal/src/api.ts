@@ -17,12 +17,14 @@ export function createApi(session: Session, base = '/api') {
   }
   const post = <T,>(path: string, body?: unknown) =>
     call<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) })
+  const put = <T,>(path: string, body: unknown) => call<T>(path, { method: 'PUT', body: JSON.stringify(body) })
   return {
     clients: () => call<Client[]>('/clients'),
     products: () => call<Product[]>('/products'),
     orders: () => call<Order[]>('/orders'),
     order: (id: number) => call<Order>(`/orders/${id}`),
     place: (lines: { sku: string; quantity: number }[]) => post<Order>('/orders', { lines }),
+    edit: (id: number, lines: { sku: string; quantity: number }[]) => put<Order>(`/orders/${id}`, { lines }),
     cancel: (id: number) => post<Order>(`/orders/${id}/cancel`),
     advance: (id: number) => post<Order>(`/orders/${id}/advance`),
   }

@@ -152,6 +152,42 @@ To save context tokens, you can apply one task group at a time by naming it in t
 /opsx:apply implement all tasks under 1 @tasks.md
 ```
 
+### 4. Update after implementation (`/opsx:update`, branch 04-update-improvements)
+
+Even after the change is fully implemented, `/opsx:update` can fold a new requirement back into the
+planning artifacts. It never edits code: it proposes revisions across the proposal, specs, design and
+tasks, and adds new unchecked tasks, so a later `/opsx:apply` carries only the delta into code. It is
+run twice here, once per sub step below.
+
+#### 4.1 Edit order while SUBMITTED (git commit 69f56d0)
+
+Adds order editing to the plan as new tasks (group 11 in `tasks.md`).
+
+```
+/opsx:update The order should be allowed to be edited. Edit is only allowed when the order is in Intake stage.
+```
+
+Then `/opsx:apply` was run with no message to carry the new delta into code (git commit 801dc18):
+
+```
+/opsx:apply
+```
+
+#### 4.2 Operator order details (git commit 5086d7a)
+
+Adds a read-only order detail view for the Warehouse Operator to the plan as new tasks (group 12 in
+`tasks.md`), and touches the related tasks 5.3 and 8.6.
+
+```
+/opsx:update Allow warehouse operators to view order details
+```
+
+Then `/opsx:apply` was run with no message to carry the new delta into code (git commit 52af2e1):
+
+```
+/opsx:apply
+```
+
 ## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.

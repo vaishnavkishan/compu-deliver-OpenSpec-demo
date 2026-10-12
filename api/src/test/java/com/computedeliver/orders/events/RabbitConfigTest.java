@@ -25,6 +25,7 @@ class RabbitConfigTest extends PostgresTestBase {
         assertThat(res.getStdout()).contains("\"name\":\"orders.events\"").contains("\"type\":\"topic\"")
                 .containsPattern("orders\\.events\"[^}]*\"durable\":true|\"durable\":true[^}]*orders\\.events");
         var bindings = RABBIT.execInContainer("rabbitmqctl", "list_bindings", "--formatter", "json");
-        assertThat(bindings.getStdout()).contains("orders.order-intaken.verification").contains("order.intaken");
+        assertThat(bindings.getStdout()).contains("orders.order-intaken.verification").contains("order.intaken")
+                .contains("orders.order-updated.verification").contains("order.updated");
     }
 }

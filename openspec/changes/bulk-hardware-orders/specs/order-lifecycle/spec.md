@@ -50,6 +50,13 @@ The system SHALL use optimistic locking on orders so that concurrent status chan
 - **WHEN** a cancel and an advance are applied concurrently to the same order
 - **THEN** exactly one succeeds and the other is rejected with a conflict error
 
+### Requirement: Edit window closes on first transition
+The system SHALL treat an order as editable only while `SUBMITTED`. Editing SHALL NOT change the order's status.
+
+#### Scenario: Leaving SUBMITTED locks edits
+- **WHEN** an order moves from `SUBMITTED` to `CONFIRMED`
+- **THEN** further edits to the order are rejected
+
 ### Requirement: Transition history
 The system SHALL record a timestamp for every status transition, including the initial `SUBMITTED` status and cancellation, and SHALL make this history visible with the order.
 
@@ -71,3 +78,18 @@ The system SHALL display each order's progress as a five-step numbered stepper (
 #### Scenario: Cancelled order display
 - **WHEN** an order is `CANCELLED`
 - **THEN** a red "cancelled" notice replaces the stepper
+
+### Requirement: Warehouse Operator views order details
+The system SHALL allow a Warehouse Operator to open a read-only detail view of any order, showing the client, lines, gross/discount/net snapshot, current status, stepper, and transition timestamps. The view SHALL offer no edit, cancel, or fulfilment controls; an advance action MAY be shown only on non-terminal orders.
+
+#### Scenario: Operator opens any order
+- **WHEN** a Warehouse Operator opens an order belonging to any client
+- **THEN** its client, lines, pricing snapshot, status, stepper, and transition timestamps are shown
+
+#### Scenario: Detail is read-only
+- **WHEN** a Warehouse Operator views an order's details
+- **THEN** no edit or cancel control is shown, and no advance action is shown for `DELIVERED` or `CANCELLED` orders
+
+#### Scenario: Unknown order
+- **WHEN** a Warehouse Operator requests an order that does not exist
+- **THEN** the request is rejected with 404

@@ -37,11 +37,11 @@ When the Enterprise Client role is active, the system SHALL show a second dropdo
 - **THEN** order history and new orders apply to the newly selected client only
 
 ### Requirement: Role capabilities
-The system SHALL expose only the actions of the active role: Enterprise Client may place orders, view own history, and cancel eligible orders; Warehouse Operator may view all orders and advance order status; Invoice Department SHALL offer no actions.
+The system SHALL expose only the actions of the active role: Enterprise Client may place orders, view own history, and cancel eligible orders; Warehouse Operator may view all orders and any order's details, and advance order status; Invoice Department SHALL offer no actions.
 
 #### Scenario: Warehouse Operator cannot place orders
 - **WHEN** the Warehouse Operator role is active
-- **THEN** all orders are listed with an advance action, and no action to place or cancel an order is offered
+- **THEN** all orders are listed with an advance action and a link to each order's details, and no action to place or cancel an order is offered
 
 #### Scenario: Invoice Department offers no actions
 - **WHEN** the Invoice Department role is active

@@ -15,8 +15,11 @@ public class RabbitConfig {
 
     public static final String EXCHANGE = "orders.events";
     public static final String ORDER_INTAKEN_KEY = "order.intaken";
+    public static final String ORDER_UPDATED_KEY = "order.updated";
     /** Bound queue so the published events can be inspected until real consumers exist. */
     public static final String VERIFICATION_QUEUE = "orders.order-intaken.verification";
+
+    public static final String UPDATED_VERIFICATION_QUEUE = "orders.order-updated.verification";
 
     @Bean
     TopicExchange ordersExchange() {
@@ -31,6 +34,16 @@ public class RabbitConfig {
     @Bean
     Binding orderIntakenBinding(Queue orderIntakenVerificationQueue, TopicExchange ordersExchange) {
         return BindingBuilder.bind(orderIntakenVerificationQueue).to(ordersExchange).with(ORDER_INTAKEN_KEY);
+    }
+
+    @Bean
+    Queue orderUpdatedVerificationQueue() {
+        return QueueBuilder.durable(UPDATED_VERIFICATION_QUEUE).build();
+    }
+
+    @Bean
+    Binding orderUpdatedBinding(Queue orderUpdatedVerificationQueue, TopicExchange ordersExchange) {
+        return BindingBuilder.bind(orderUpdatedVerificationQueue).to(ordersExchange).with(ORDER_UPDATED_KEY);
     }
 
     @Bean

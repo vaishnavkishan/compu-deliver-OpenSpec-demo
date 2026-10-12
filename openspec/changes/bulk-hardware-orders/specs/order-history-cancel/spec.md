@@ -21,6 +21,10 @@ The system SHALL show an Enterprise Client the list of their own orders, includi
 - **WHEN** a client opens one of their orders
 - **THEN** its lines, pricing snapshot, current status, and transition timestamps are shown
 
+#### Scenario: Another client's order detail
+- **WHEN** a client requests the details of an order belonging to a different client
+- **THEN** the request is rejected and no order data is returned
+
 ### Requirement: Client cancellation
 The system SHALL allow an Enterprise Client to cancel their own order only while its status is `SUBMITTED` or `CONFIRMED`. Cancellation SHALL take effect immediately, incur no fee, and set the status to `CANCELLED`.
 
