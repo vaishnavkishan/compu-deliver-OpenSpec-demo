@@ -4,11 +4,13 @@ import type { Order } from '../types'
 import { dateOf, money, nextStatus, STATUS_LABEL } from '../format'
 import StatusBadge from '../components/StatusBadge'
 import { useToast } from '../components/Toast'
+import OrderPage from './OrderPage'
 
 export default function WarehouseView({ api }: { api: Api }) {
   const toast = useToast()
   const [orders, setOrders] = useState<Order[]>([])
   const [search, setSearch] = useState('')
+  const [viewing, setViewing] = useState<number>()
 
   const load = useCallback(() => {
     api.orders().then(setOrders).catch(e => toast(e.message, 'error'))
@@ -23,6 +25,10 @@ export default function WarehouseView({ api }: { api: Api }) {
       toast((e as Error).message, 'error')
     }
     load()
+  }
+
+  if (viewing != null) {
+    return <OrderPage api={api} orderId={viewing} operator onBack={() => { setViewing(undefined); load() }} />
   }
 
   const q = search.toLowerCase()
@@ -58,7 +64,8 @@ export default function WarehouseView({ api }: { api: Api }) {
                   <td className="py-3 px-4 text-xs font-medium text-slate-700">{o.totalUnits} Units</td>
                   <td className="py-3 px-4 font-semibold text-slate-900">{money(o.netCents)}</td>
                   <td className="py-3 px-4"><StatusBadge status={o.status} /></td>
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-right space-x-2">
+                    <button onClick={() => setViewing(o.id)} className="text-xs border border-slate-200 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-md font-semibold">View</button>
                     {next && (
                       <button onClick={() => advance(o)} className="text-xs bg-slate-900 hover:bg-slate-700 text-white px-3 py-1.5 rounded-md font-semibold">
                         Advance to {STATUS_LABEL[next]}

@@ -193,3 +193,32 @@ describe('WarehouseView', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Order was modified')
   })
 })
+
+describe('Warehouse Operator order detail', () => {
+  it('opens a read-only detail from the View link with client, no Edit/Cancel/Submit, and Advance', async () => {
+    const api = mk({ orders: vi.fn().mockResolvedValue([order(1, 'SUBMITTED', { clientName: 'Globex' })]),
+      order: vi.fn().mockResolvedValue(order(1, 'SUBMITTED', { clientName: 'Globex' })), advance: vi.fn().mockResolvedValue(order(1, 'CONFIRMED')) })
+    wrap(<WarehouseView api={api} />)
+    await userEvent.click(await screen.findByText('View'))
+    expect(await screen.findByText('Order Details: ORD-1')).toBeInTheDocument()
+    expect(api.order).toHaveBeenCalledWith(1)
+    expect(await screen.findByTestId('client-name')).toHaveTextContent('Globex')
+    expect(await screen.findByLabelText('Quantity HW-1')).toBeDisabled()
+    expect(screen.getByTestId('history')).toHaveTextContent('Submitted: 2026-08-16 10:00:00')
+    expect(screen.queryByText('Edit Order')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Cancel/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Order Locked|Submit Enterprise Order/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByText('Advance to Confirmed'))
+    expect(api.advance).toHaveBeenCalledWith(1)
+    expect(await screen.findByRole('status')).toHaveTextContent('moved to Confirmed')
+  })
+  it('hides Advance on terminal orders and returns to the queue with Back', async () => {
+    const api = mk({ orders: vi.fn().mockResolvedValue([order(2, 'DELIVERED')]), order: vi.fn().mockResolvedValue(order(2, 'DELIVERED')) })
+    wrap(<WarehouseView api={api} />)
+    await userEvent.click(await screen.findByText('View'))
+    await screen.findByLabelText('Quantity HW-2').catch(() => screen.findByLabelText('Quantity HW-1'))
+    expect(screen.queryByText(/Advance/)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Back'))
+    expect(await screen.findByTestId('queue-count')).toBeInTheDocument()
+  })
+})

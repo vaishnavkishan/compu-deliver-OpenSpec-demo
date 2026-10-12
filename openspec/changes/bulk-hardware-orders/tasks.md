@@ -68,5 +68,5 @@ Reference: the Enterprise Client mockups in `figma-designs/` and the "UI/UX Refe
 
 ## 12. Operator order details
 
-- [ ] 12.1 Allow `WAREHOUSE_OPERATOR` on `GET /orders/{id}` for any order (client scoping unchanged) and include the client name in the response; verify tests for operator access to any client's order, client A still blocked from client B's order, and 404 for an unknown id
-- [ ] 12.2 Add a "View" link on Warehouse Operator queue rows and a read-only operator detail view (stepper, lines, pricing snapshot, transition timestamps, client; no Edit or Cancel controls; Advance only on non-terminal orders); verify with RTL tests and manually
+- [x] 12.1 Allow `WAREHOUSE_OPERATOR` on `GET /orders/{id}` for any order (client scoping unchanged) and include the client name in the response; verify tests for operator access to any client's order, client A still blocked from client B's order, and 404 for an unknown id
+- [x] 12.2 Add a "View" link on Warehouse Operator queue rows and a read-only operator detail view (stepper, lines, pricing snapshot, transition timestamps, client; no Edit or Cancel controls; Advance only on non-terminal orders); verify with RTL tests and manually

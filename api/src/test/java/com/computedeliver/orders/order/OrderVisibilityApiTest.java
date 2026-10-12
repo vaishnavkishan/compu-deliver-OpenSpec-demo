@@ -50,6 +50,24 @@ class OrderVisibilityApiTest extends ApiTestSupport {
     }
 
     @Test
+    void operatorCanOpenAnyClientsOrderWithClientName() {
+        long a = placeOrder(ACME);
+        long b = placeOrder(GLOBEX);
+        for (long id : List.of(a, b)) {
+            var res = asOperator(HttpMethod.GET, "/orders/" + id, null);
+            assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(res.getBody().get("id").asLong()).isEqualTo(id);
+            assertThat(res.getBody().get("clientName").asText()).isNotBlank();
+        }
+    }
+
+    @Test
+    void unknownOrderIsNotFoundForClientAndOperator() {
+        assertThat(asOperator(HttpMethod.GET, "/orders/999999", null).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(asClient(HttpMethod.GET, "/orders/999999", null, ACME).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
     void detailIncludesLinesPricingStatusAndHistory() {
         long id = placeOrder(ACME);
         JsonNode o = asClient(HttpMethod.GET, "/orders/" + id, null, ACME).getBody();
