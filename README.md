@@ -94,14 +94,41 @@ decisions), and **tasks** (the implementation checklist).
 > **Note:** OpenSpec has no equivalent of Spec Kit's constitution command. Project conventions and
 > guardrails live in `CLAUDE.md` and in the `spec.md` files instead.
 
-### 2. Update the change with the Figma design (`/opsx:update`, branch 02-openspec-update-requirement)
+### 2. Update the change (`/opsx:update`, branch 02-openspec-update-requirement)
 
 Revises the existing planning artifacts (proposal, specs, design, tasks) and keeps them coherent with
-one another. It never edits code. Here it folds the UI/UX from the exported Figma HTML in
-`figma-designs/` into the `bulk-hardware-orders` change, so the implementation matches the design.
+one another. It never edits code. It is run twice here, once per sub step below.
+
+#### 2.1 Figma design (git commit c71b72f)
+
+Folds the UI/UX from the exported Figma HTML in `figma-designs/` into the `bulk-hardware-orders`
+change, so the implementation matches the design.
 
 ```
 /opsx:update analyse the Figma design html figma-designs and add the information about the UI/UX to be same as html when it is implemented
+```
+
+#### 2.2 Tech stack (git commit e200959)
+
+Replaces the tech stack the AI assumed during propose with an explicit one, and sets what is in and
+out of scope.
+
+```
+/opsx:update Stack:
+- Backend: Java 25, Spring Boot 3.5 (Web, Validation, Data JPA, Actuator, AMQP/RabbitMQ), Maven, Lombok, Flyway, springdoc-openapi
+- DB & Broker: PostgreSQL 17 (@Version optimistic locking), RabbitMQ
+- Frontend: React 19, TypeScript, Vite, Tailwind
+- Testing: JUnit 5, Mockito, AssertJ, Testcontainers | Vitest, RTL
+- Infra: Docker (multi-stage), k3s / Rancher Desktop, Helm -> K8s
+
+In Scope:
+- Order API & DB: Order domain (intake, pricing, status lifecycle, cancellation, contract terms, history). Publishes `OrderIntaken` event to RabbitMQ.
+- Message Queue: RabbitMQ broker.
+- Portal UI: Enterprise Client dashboard + order create/detail views (role-gated shell).
+
+Out of Scope (Future):
+- Warehouse API / DB & Operator UI
+- Invoicing API / DB & Staff UI
 ```
 
 > **Note:** The spec is not frozen after `/opsx:propose`. `/opsx:update` can be run at any point to
