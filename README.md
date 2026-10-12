@@ -134,3 +134,83 @@ Out of Scope (Future):
 > **Note:** The spec is not frozen after `/opsx:propose`. `/opsx:update` can be run at any point to
 > modify the change's artifacts (proposal, specs, design, tasks), before or during implementation,
 > whenever requirements shift or new decisions need to be folded in.
+
+### 3. Apply the change (`/opsx:apply`, branch 03-openspec-apply)
+
+Implements the tasks in `openspec/changes/bulk-hardware-orders/tasks.md`. The code lives in `api/`
+(Spring Boot) and `portal/` (React).
+
+#### Role model: no authentication, not a security boundary
+
+There is no login. The portal sends the active role in an `X-Role` header (`ENTERPRISE_CLIENT` or
+`WAREHOUSE_OPERATOR`) and, for Enterprise Client, the acting client in `X-Client-Id`. The API checks
+these headers on every `/clients`, `/products` and `/orders` call and enforces each role's allowed
+actions and client scoping on the server. `INVOICE_DEPARTMENT` is a placeholder and is rejected with 403.
+
+Because the headers are self-declared, **anyone who can reach the API can act as any role or client.**
+This is a demo convenience and must not be treated as access control.
+
+#### Seeded data
+
+Clients are seeded by a Flyway migration. Each has a contract discount applied to the gross total at
+intake:
+
+| Client             | Contract discount |
+| ------------------ | ----------------- |
+| Acme Corporation   | 10%               |
+| Globex Industries  | 15%               |
+| Initech Ltd        | 0% (has a contract) |
+| Umbrella Logistics | no contract (orders are rejected with 422) |
+
+Products (SKU, name, unit price) are seeded the same way and listed by `GET /products`.
+
+#### Run locally (development)
+
+Requires Java 25, Maven, Node.js 20+ and Docker.
+
+```bash
+# 1. Postgres (localhost:5433) and RabbitMQ (localhost:5673, management UI on 15673)
+docker compose up -d
+
+# 2. API on http://localhost:8081 (Flyway creates and seeds the schema on startup)
+cd api && mvn spring-boot:run
+
+# 3. Portal on http://localhost:5173 (proxies /api to the API)
+cd portal && npm install && npm run dev
+```
+
+Health: <http://localhost:8081/actuator/health>. OpenAPI docs: <http://localhost:8081/swagger-ui.html>.
+
+Tests (the API tests use Testcontainers, so Docker must be running):
+
+```bash
+cd api && mvn test
+cd portal && npm test
+```
+
+#### Deploy to k3s / Rancher Desktop (Helm)
+
+Requires Rancher Desktop with the `dockerd (moby)` engine, so locally built images are visible to the
+cluster, plus `kubectl` and `helm`.
+
+```bash
+# Build the images (tags match helm/bulk-hardware-orders/values.yaml)
+docker build -t orders-api:latest api
+docker build -t orders-portal:latest portal
+
+# Render, then install the API, portal, PostgreSQL and RabbitMQ
+helm template bulk-hardware-orders helm/bulk-hardware-orders
+helm install bulk-hardware-orders helm/bulk-hardware-orders
+kubectl get pods
+```
+
+Open the portal at <http://localhost:30081>. Use the Role dropdown to switch between Enterprise
+Client (place and cancel orders) and Warehouse Operator (advance orders to `DELIVERED`). Each placed
+order publishes an `OrderIntaken` message, which you can see on the `orders.order-intaken.verification`
+queue:
+
+```bash
+kubectl exec deploy/rabbitmq -- rabbitmqctl list_queues name messages
+```
+
+Remove the stack with `helm uninstall bulk-hardware-orders`.

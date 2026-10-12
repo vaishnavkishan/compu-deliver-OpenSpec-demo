@@ -1,0 +1,16 @@
+api:
+  image: orders-api:latest
+  pullPolicy: IfNotPresent
+portal:
+  image: orders-portal:latest
+  pullPolicy: IfNotPresent
+  nodePort: 30081
+postgres:
+  image: postgres:17
+  db: orders
+  user: orders
+  password: orders
+rabbitmq:
+  image: rabbitmq:4-management
+  user: guest
+  password: guest
