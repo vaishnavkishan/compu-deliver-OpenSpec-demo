@@ -188,6 +188,23 @@ Then `/opsx:apply` was run with no message to carry the new delta into code (git
 /opsx:apply
 ```
 
+### 5. Sync specs (`/opsx:sync`, branch 05-openspec-sync)
+
+**Why:** A change keeps its requirements as delta specs inside `openspec/changes/bulk-hardware-orders/specs/`.
+Until they are synced, `openspec/specs/` (the main specs, the source of truth for what the system
+does) stays empty. Syncing publishes them there without archiving, so the change stays active and can
+still be updated.
+
+**What:** The agent reads each delta spec and merges it into the main spec for that capability. Here
+all six capabilities were new, so it created `openspec/specs/<capability>/spec.md` for `order-intake`,
+`order-lifecycle`, `order-edit`, `order-events`, `order-history-cancel` and `role-selection`. Each
+keeps its Purpose, with the requirements under a single `## Requirements` section and no delta
+headers. It then ran `openspec validate --specs`, which passed.
+
+```
+/opsx:sync
+```
+
 ## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.
