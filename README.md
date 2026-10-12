@@ -205,6 +205,20 @@ headers. It then ran `openspec validate --specs`, which passed.
 /opsx:sync
 ```
 
+### 6. Archive the change (`/opsx:archive`, branch 06-openspec-archive)
+
+**Why:** Once a change is implemented and its specs are synced, it is finished. Archiving takes it
+out of the active changes list while keeping it as a dated record of what was planned and why.
+
+**What:** The agent moved `openspec/changes/bulk-hardware-orders/` to
+`openspec/changes/archive/2026-10-12-bulk-hardware-orders/` (proposal, design, tasks and delta specs
+included). The main specs in `openspec/specs/` were already synced in step 5, so they stay as the
+source of truth.
+
+```
+/opsx:archive
+```
+
 ## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.
