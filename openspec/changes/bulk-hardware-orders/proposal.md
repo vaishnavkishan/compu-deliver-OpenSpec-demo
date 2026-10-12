@@ -33,3 +33,4 @@ None. The project has no existing specs.
 - Greenfield: no existing application code. This introduces the whole demo app (UI, order logic, persistence) plus seed data for clients, discounts, and products.
 - Tech stack is not yet decided; it will be chosen in design.
 - No external dependencies or integrations; the catalog and contracts are mocked locally.
+- The UI must match the mockups in `figma-designs/` (layout, styling, status colors, flows). Features that appear only in the mockups, such as asset tagging, invoicing and order editing, remain out of scope.

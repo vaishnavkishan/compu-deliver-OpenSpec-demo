@@ -49,3 +49,10 @@ The system SHALL provide seeded mock data standing in for an external system: cl
 #### Scenario: Seed data available at startup
 - **WHEN** the application starts for the first time
 - **THEN** at least one client with a discount percentage and at least one product with a unit price are available
+
+### Requirement: Role-aware page header
+The system SHALL show a header on every view containing the app title, the active role's portal label, the Role dropdown, and a contract badge showing the acting client's discount for the Enterprise Client role. The header icon SHALL be blue for Enterprise Client, dark slate for Warehouse Operator, and purple for Invoice Department, matching `figma-designs/`.
+
+#### Scenario: Header follows role
+- **WHEN** the user switches role
+- **THEN** the portal label and icon color change to that role's, and the contract badge is shown only for Enterprise Client

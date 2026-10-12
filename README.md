@@ -11,10 +11,24 @@ TLDR;
 
 ```mermaid
 graph LR
-    A["\explore & \propose (new req)"] --> B["\propose (edits)"] --> U["\update (optional)"] --> C["\apply"] --> D["\sync"] --> E["\archive"]
+    subgraph NEW["new requirement"]
+        direction LR
+        A["\explore"] --> B["\propose"]
+    end
 
+    B --> C["\apply"]
+    B -.-> U["\update (optional)"]
+    U -.-> C
+    C --> V["\update (optional)"]
+    V -.->|loop| C
+    C --> D["\sync"]
+    D --> E["\archive"]
+
+    style NEW fill:none,stroke:#555,stroke-width:2px,stroke-dasharray: 5 5
     style A fill:#e1f5ff
+    style B fill:#e1f5ff
     style U stroke-dasharray: 5 5
+    style V stroke-dasharray: 5 5
 ```
 
 ## Prerequisites (branch name 00-openspec-initialize)
@@ -79,3 +93,17 @@ decisions), and **tasks** (the implementation checklist).
 
 > **Note:** OpenSpec has no equivalent of Spec Kit's constitution command. Project conventions and
 > guardrails live in `CLAUDE.md` and in the `spec.md` files instead.
+
+### 2. Update the change with the Figma design (`/opsx:update`, branch 02-openspec-update-requirement)
+
+Revises the existing planning artifacts (proposal, specs, design, tasks) and keeps them coherent with
+one another. It never edits code. Here it folds the UI/UX from the exported Figma HTML in
+`figma-designs/` into the `bulk-hardware-orders` change, so the implementation matches the design.
+
+```
+/opsx:update analyse the Figma design html figma-designs and add the information about the UI/UX to be same as html when it is implemented
+```
+
+> **Note:** The spec is not frozen after `/opsx:propose`. `/opsx:update` can be run at any point to
+> modify the change's artifacts (proposal, specs, design, tasks), before or during implementation,
+> whenever requirements shift or new decisions need to be folded in.

@@ -49,3 +49,14 @@ The system SHALL record a timestamp for every status transition, including the i
 #### Scenario: Initial entry
 - **WHEN** an order is placed
 - **THEN** its history contains a `SUBMITTED` entry with the time of intake
+
+### Requirement: Lifecycle stepper and status badges
+The system SHALL display each order's progress as a five-step numbered stepper (Submitted, Confirmed, Processing, Shipped, Delivered) in which completed steps are green, the current step is blue, and later steps are grey. Status badges SHALL be colored: Submitted blue, Confirmed sky, Processing amber, Shipped indigo, Delivered green, Cancelled red. A `CANCELLED` order SHALL show a red notice in place of the stepper.
+
+#### Scenario: Stepper reflects status
+- **WHEN** an order is `PROCESSING`
+- **THEN** steps Submitted and Confirmed are green, Processing is blue, and Shipped and Delivered are grey
+
+#### Scenario: Cancelled order display
+- **WHEN** an order is `CANCELLED`
+- **THEN** a red "cancelled" notice replaces the stepper

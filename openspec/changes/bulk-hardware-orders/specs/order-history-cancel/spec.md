@@ -50,3 +50,21 @@ The system SHALL show the Invoice Department role a read-only list of all orders
 #### Scenario: All orders visible
 - **WHEN** the Invoice Department role is active
 - **THEN** orders from every client are listed with status and pricing
+
+### Requirement: Client dashboard layout
+The system SHALL show the Enterprise Client an "Active Procurement Tracker" with a count pill and one card per non-terminal order (id, date, units, net total, stepper, view link, and a cancel button only when cancellation is allowed), followed by an "Order History Log" table of `DELIVERED` and `CANCELLED` orders, as in `figma-designs/enterprise-user-dashboard.html`. A "+ Create New Order" action SHALL open the order form.
+
+#### Scenario: Active and history split
+- **WHEN** a client has orders in several statuses
+- **THEN** non-terminal orders appear in the tracker and terminal orders in the history table
+
+#### Scenario: No active orders
+- **WHEN** the client has no non-terminal orders
+- **THEN** the tracker shows an empty-state message
+
+### Requirement: Cancel confirmation
+The system SHALL ask for confirmation in a modal ("Confirm Cancellation" with "Keep Order" and "Yes, Cancel Request") before cancelling, and SHALL show a toast after a successful cancellation.
+
+#### Scenario: Keep order
+- **WHEN** the client opens the cancel modal and chooses "Keep Order"
+- **THEN** the modal closes and the order is unchanged

@@ -35,9 +35,13 @@
 
 ## 7. UI
 
-- [ ] 7.1 Build the page shell with the role dropdown and the conditional client dropdown; verify manually that the client dropdown shows only for Enterprise Client and switching it changes the scoped data
-- [ ] 7.2 Build the Enterprise Client views: place-order form with lines and a net total result, order history with detail and timestamps, and a cancel button shown only when allowed; verify manually that errors from the API (no contract, invalid line, cancel blocked) are displayed
-- [ ] 7.3 Build the Warehouse Operator view (order list with an advance button) and the Invoice Department read-only view with no actions; verify manually that no cancel or advance controls appear on the Invoice Department view
+Reference: the mockups in `figma-designs/` and the "UI/UX Reference" section of design.md. Single page, same visuals; do not build mockup-only features.
+
+- [ ] 7.1 Set up Tailwind and the page shell: header with title, portal pill, Role dropdown, conditional Company dropdown, contract badge, and per-role icon color; verify manually that the client dropdown shows only for Enterprise Client, switching it changes the scoped data, and the header matches `enterprise-user-dashboard.html`
+- [ ] 7.2 Build shared UI pieces: five-step stepper (pulsing current step, cancelled banner), status badges with the specified colors, toast, and confirmation modal; verify manually that each status renders the right colors
+- [ ] 7.3 Build the Enterprise Client dashboard: "+ Create New Order", Active Procurement Tracker with count pill and cards, Order History Log table, and cancel via modal; verify manually against `enterprise-user-dashboard.html`, including the empty state and that cancel appears only for `SUBMITTED` or `CONFIRMED`
+- [ ] 7.4 Build the order form and order detail view: product search picker, quantity, subtotal, remove, add line, sticky Contract Net Pricing panel (freight shown as Waived), read-only detail with transition timestamps; verify manually against `enterprise-user-detail-page.html` and that API errors (no contract, invalid line) show as toasts
+- [ ] 7.5 Build the Warehouse Operator view (queue table with search and count pill, advance button, badges) and the Invoice Department read-only view (all orders, no actions), styled like `warehouse-ops-dashboard.html` and `invoice-staff-dashboard.html` without tagging, shipping, or invoicing features; verify manually that no cancel or advance controls appear for Invoice Department
 
 ## 8. Integration check
 
