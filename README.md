@@ -137,34 +137,22 @@ Out of Scope (Future):
 
 ### 3. Apply the change (`/opsx:apply`, branch 03-openspec-apply)
 
-Implements the tasks in `openspec/changes/bulk-hardware-orders/tasks.md`. The code lives in `api/`
-(Spring Boot) and `portal/` (React).
+Turns the finished plan into working code. It implements the tasks in
+`openspec/changes/bulk-hardware-orders/tasks.md` one by one and ticks each off as it goes, so the
+code follows the spec instead of drifting from it. The code lives in `api/` (Spring Boot) and
+`portal/` (React).
 
-#### Role model: no authentication, not a security boundary
+```
+/opsx:apply
+```
 
-There is no login. The portal sends the active role in an `X-Role` header (`ENTERPRISE_CLIENT` or
-`WAREHOUSE_OPERATOR`) and, for Enterprise Client, the acting client in `X-Client-Id`. The API checks
-these headers on every `/clients`, `/products` and `/orders` call and enforces each role's allowed
-actions and client scoping on the server. `INVOICE_DEPARTMENT` is a placeholder and is rejected with 403.
+To save context tokens, you can apply one task group at a time by naming it in the prompt:
 
-Because the headers are self-declared, **anyone who can reach the API can act as any role or client.**
-This is a demo convenience and must not be treated as access control.
+```
+/opsx:apply implement all tasks under 1 @tasks.md
+```
 
-#### Seeded data
-
-Clients are seeded by a Flyway migration. Each has a contract discount applied to the gross total at
-intake:
-
-| Client             | Contract discount |
-| ------------------ | ----------------- |
-| Acme Corporation   | 10%               |
-| Globex Industries  | 15%               |
-| Initech Ltd        | 0% (has a contract) |
-| Umbrella Logistics | no contract (orders are rejected with 422) |
-
-Products (SKU, name, unit price) are seeded the same way and listed by `GET /products`.
-
-#### Run locally (development)
+## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.
 
@@ -188,7 +176,7 @@ cd api && mvn test
 cd portal && npm test
 ```
 
-#### Deploy to k3s / Rancher Desktop (Helm)
+## Deploy to k3s / Rancher Desktop (Helm)
 
 Requires Rancher Desktop with the `dockerd (moby)` engine, so locally built images are visible to the
 cluster, plus `kubectl` and `helm`.
