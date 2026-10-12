@@ -46,6 +46,11 @@ public class Order {
     @OrderBy("changedAt ASC, id ASC")
     private List<StatusChange> history = new ArrayList<>();
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "order_id", nullable = false)
+    @OrderBy("editedAt ASC, id ASC")
+    private List<OrderEdit> edits = new ArrayList<>();
+
     Order(long clientId, int discountBp, Instant now) {
         this.clientId = clientId;
         this.discountBp = discountBp;
@@ -60,6 +65,18 @@ public class Order {
         lines.add(line);
         grossCents = Math.addExact(grossCents, line.subtotalCents());
         netCents = Pricing.netCents(grossCents, discountBp);
+    }
+
+    /** Drops all lines and zeroes the totals so the order can be re-priced with {@link #addLine}. */
+    void startEdit(int discountBp, Instant now) {
+        if (status != OrderStatus.SUBMITTED) {
+            throw new IllegalStateException("Cannot edit an order that is " + status);
+        }
+        lines.clear();
+        grossCents = 0;
+        netCents = 0;
+        this.discountBp = discountBp;
+        edits.add(new OrderEdit(now));
     }
 
     public int totalUnits() {

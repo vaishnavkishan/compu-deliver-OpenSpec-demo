@@ -22,6 +22,9 @@ public final class OrderDtos {
     public record HistoryView(OrderStatus status, Instant changedAt) {
     }
 
+    public record EditView(Instant editedAt) {
+    }
+
     public record OrderView(
             long id,
             long clientId,
@@ -33,6 +36,7 @@ public final class OrderDtos {
             int totalUnits,
             Instant createdAt,
             List<LineView> lines,
-            List<HistoryView> history) {
+            List<HistoryView> history,
+            List<EditView> edits) {
     }
 }

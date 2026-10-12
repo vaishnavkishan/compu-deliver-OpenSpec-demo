@@ -22,7 +22,8 @@ export default function OrderPage({ api, orderId, client, onBack }: Props) {
   const [rows, setRows] = useState<Row[]>([blank()])
   const [order, setOrder] = useState<Order>()
   const [open, setOpen] = useState<number>()
-  const readOnly = orderId != null
+  const [editing, setEditing] = useState(false)
+  const readOnly = orderId != null && !editing
 
   useEffect(() => { api.products().then(setProducts).catch(e => toast(e.message, 'error')) }, [api, toast])
   useEffect(() => {
@@ -50,9 +51,21 @@ export default function OrderPage({ api, orderId, client, onBack }: Props) {
 
   const update = (key: number, patch: Partial<Row>) => setRows(rs => rs.map(r => (r.key === key ? { ...r, ...patch } : r)))
 
+  function startEdit() {
+    if (!order) return
+    setRows(order.lines.map(l => ({ key: ++rowSeq, sku: l.sku, query: l.name, quantity: l.quantity })))
+    setEditing(true)
+  }
+
   async function submit() {
     const lines = rows.filter(r => r.sku).map(r => ({ sku: r.sku!, quantity: qtyOf(r) }))
     try {
+      if (orderId != null) {
+        setOrder(await api.edit(orderId, lines))
+        setEditing(false)
+        toast(`Order ORD-${orderId} updated.`)
+        return
+      }
       const placed = await api.place(lines)
       toast(`Order ORD-${placed.id} submitted.`)
       onBack()
@@ -73,6 +86,13 @@ export default function OrderPage({ api, orderId, client, onBack }: Props) {
       <section className="bg-white border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
         <h3 className="text-sm font-bold text-slate-900 mb-3">Order Lifecycle Progression</h3>
         <Stepper status={order?.status ?? 'SUBMITTED'} large />
+        {order && order.edits?.length > 0 && (
+          <ul data-testid="edits" className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
+            {order.edits.map((e, i) => (
+              <li key={i}>Edited: <span className="font-mono">{e.editedAt.replace('T', ' ').slice(0, 19)}</span></li>
+            ))}
+          </ul>
+        )}
         {order && order.history.length > 0 && (
           <ul data-testid="history" className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
             {order.history.map((h, i) => (
@@ -184,10 +204,16 @@ export default function OrderPage({ api, orderId, client, onBack }: Props) {
                 <span data-testid="net" className="text-xl font-extrabold text-blue-600">{money(totals?.net ?? 0)}</span>
               </div>
             </div>
-            <div className="mt-6">
+            <div className="mt-6 space-y-2">
+              {order?.status === 'SUBMITTED' && !editing && (
+                <button onClick={startEdit} className="w-full font-semibold py-3 px-4 rounded-lg shadow-sm text-sm bg-white border border-blue-600 text-blue-600 hover:bg-blue-50">Edit Order</button>
+              )}
+              {editing && (
+                <button onClick={() => setEditing(false)} className="w-full font-semibold py-2 px-4 rounded-lg text-sm border border-slate-200 text-slate-700 hover:bg-slate-100">Discard Changes</button>
+              )}
               <button onClick={submit} disabled={readOnly}
                 className={`w-full font-semibold py-3 px-4 rounded-lg shadow-sm text-sm ${readOnly ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}>
-                {readOnly ? `Order Locked (${order ? dateOf(order.createdAt) : 'Read Only'})` : 'Submit Enterprise Order'}
+                {readOnly ? `Order Locked (${order ? dateOf(order.createdAt) : 'Read Only'})` : editing ? 'Save Changes' : 'Submit Enterprise Order'}
               </button>
             </div>
           </div>

@@ -11,7 +11,7 @@ const order = (id: number, status: OrderStatus, extra: Partial<Order> = {}): Ord
   id, clientId: 1, clientName: 'Acme Corp', status, grossCents: 100000, discountBp: 1000, netCents: 90000,
   totalUnits: 5, createdAt: '2026-08-16T10:00:00Z',
   lines: [{ sku: 'HW-1', name: 'Blade', quantity: 5, unitPriceCents: 20000, subtotalCents: 100000 }],
-  history: [{ status: 'SUBMITTED', changedAt: '2026-08-16T10:00:00Z' }], ...extra,
+  history: [{ status: 'SUBMITTED', changedAt: '2026-08-16T10:00:00Z' }], edits: [], ...extra,
 })
 const products = [
   { sku: 'HW-1', name: 'Blade Server', unitPriceCents: 20000 },
@@ -19,7 +19,7 @@ const products = [
 ]
 const mk = (o: Partial<Record<keyof Api, unknown>> = {}) => ({
   orders: vi.fn().mockResolvedValue([]), order: vi.fn(), products: vi.fn().mockResolvedValue(products),
-  clients: vi.fn(), place: vi.fn(), cancel: vi.fn(), advance: vi.fn(), ...o }) as unknown as Api & Record<string, ReturnType<typeof vi.fn>>
+  clients: vi.fn(), place: vi.fn(), edit: vi.fn(), cancel: vi.fn(), advance: vi.fn(), ...o }) as unknown as Api & Record<string, ReturnType<typeof vi.fn>>
 const wrap = (ui: React.ReactNode) => render(<ToastProvider>{ui}</ToastProvider>)
 
 describe('Dashboard', () => {
@@ -121,6 +121,45 @@ describe('OrderPage', () => {
     expect(screen.getByTestId('history')).toHaveTextContent('Confirmed: 2026-08-16 11:30:00')
     expect(screen.getByTestId('net')).toHaveTextContent('$900.00')
     expect(screen.queryByText('Add Line Item')).not.toBeInTheDocument()
+  })
+  it('shows Edit Order only for SUBMITTED orders', async () => {
+    for (const status of ['CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'] as OrderStatus[]) {
+      const { unmount } = wrap(<OrderPage api={mk({ order: vi.fn().mockResolvedValue(order(3, status)) })} orderId={3} client={client} onBack={vi.fn()} />)
+      await screen.findByLabelText('Quantity HW-1')
+      expect(screen.queryByText('Edit Order')).not.toBeInTheDocument()
+      expect(screen.queryByText('Save Changes')).not.toBeInTheDocument()
+      unmount()
+    }
+    wrap(<OrderPage api={mk({ order: vi.fn().mockResolvedValue(order(3, 'SUBMITTED')) })} orderId={3} client={client} onBack={vi.fn()} />)
+    expect(await screen.findByText('Edit Order')).toBeInTheDocument()
+  })
+  it('edits a SUBMITTED order with a prefilled form and saves changes', async () => {
+    const updated = order(3, 'SUBMITTED', { totalUnits: 7, grossCents: 140000, netCents: 126000,
+      lines: [{ sku: 'HW-1', name: 'Blade Server', quantity: 7, unitPriceCents: 20000, subtotalCents: 140000 }],
+      edits: [{ editedAt: '2026-08-16T12:15:00Z' }] })
+    const api = mk({ order: vi.fn().mockResolvedValue(order(3, 'SUBMITTED')), edit: vi.fn().mockResolvedValue(updated) })
+    wrap(<OrderPage api={api} orderId={3} client={client} onBack={vi.fn()} />)
+    await userEvent.click(await screen.findByText('Edit Order'))
+    expect(screen.queryByText('Edit Order')).not.toBeInTheDocument()
+    const qty = await screen.findByLabelText('Quantity')
+    expect(qty).toHaveValue(5)
+    await userEvent.clear(qty)
+    await userEvent.type(qty, '7')
+    expect(screen.getByTestId('net')).toHaveTextContent('$1,260.00')
+    await userEvent.click(screen.getByText('Save Changes'))
+    expect(api.edit).toHaveBeenCalledWith(3, [{ sku: 'HW-1', quantity: 7 }])
+    expect(await screen.findByRole('status')).toHaveTextContent('ORD-3 updated')
+    expect(await screen.findByLabelText('Quantity HW-1')).toBeDisabled()
+    expect(screen.getByTestId('edits')).toHaveTextContent('Edited: 2026-08-16 12:15:00')
+  })
+  it('shows API errors from a rejected edit as a toast and stays in edit mode', async () => {
+    const api = mk({ order: vi.fn().mockResolvedValue(order(3, 'SUBMITTED')),
+      edit: vi.fn().mockRejectedValue(new ApiError(409, 'Order 3 is CONFIRMED and can no longer be edited')) })
+    wrap(<OrderPage api={api} orderId={3} client={client} onBack={vi.fn()} />)
+    await userEvent.click(await screen.findByText('Edit Order'))
+    await userEvent.click(screen.getByText('Save Changes'))
+    expect(await screen.findByRole('status')).toHaveTextContent('can no longer be edited')
+    expect(screen.getByText('Save Changes')).toBeInTheDocument()
   })
 })
 

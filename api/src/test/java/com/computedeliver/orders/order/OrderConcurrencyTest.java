@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.support.TransactionTemplate;
 
 class OrderConcurrencyTest extends ApiTestSupport {
@@ -53,6 +54,45 @@ class OrderConcurrencyTest extends ApiTestSupport {
             assertThat(status).isEqualTo(c.get() == HttpStatus.OK ? "CANCELLED" : "PROCESSING");
             JsonNode history = asOperator(HttpMethod.GET, "/orders/" + id, null).getBody().get("history");
             assertThat(history).hasSize(3);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    /** An edit and an advance both read a SUBMITTED order; exactly one wins and the loser gets a 409. */
+    @RepeatedTest(5)
+    void editRacingAdvanceYieldsOneSuccessAndOneConflict() throws Exception {
+        long id = placeOrder(ACME);
+        assertThat(raceStatuses(
+                () -> asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MON-27-4K", 7)), ACME),
+                () -> asOperator(HttpMethod.POST, "/orders/" + id + "/advance", null)))
+                .containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
+    }
+
+    @RepeatedTest(5)
+    void editRacingCancelYieldsOneSuccessAndOneConflict() throws Exception {
+        long id = placeOrder(ACME);
+        assertThat(raceStatuses(
+                () -> asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MON-27-4K", 7)), ACME),
+                () -> asClient(HttpMethod.POST, "/orders/" + id + "/cancel", null, ACME)))
+                .containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.CONFLICT);
+    }
+
+    private List<HttpStatus> raceStatuses(Callable<ResponseEntity<JsonNode>> first,
+                                          Callable<ResponseEntity<JsonNode>> second) throws Exception {
+        CountDownLatch go = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        try {
+            Future<HttpStatus> a = pool.submit(() -> {
+                go.await();
+                return HttpStatus.valueOf(first.call().getStatusCode().value());
+            });
+            Future<HttpStatus> b = pool.submit(() -> {
+                go.await();
+                return HttpStatus.valueOf(second.call().getStatusCode().value());
+            });
+            go.countDown();
+            return List.of(a.get(), b.get());
         } finally {
             pool.shutdownNow();
         }

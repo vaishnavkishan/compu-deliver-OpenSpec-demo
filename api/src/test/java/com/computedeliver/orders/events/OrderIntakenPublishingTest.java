@@ -35,6 +35,55 @@ class OrderIntakenPublishingTest extends ApiTestSupport {
     @BeforeEach
     void drain() {
         admin.purgeQueue(RabbitConfig.VERIFICATION_QUEUE, true);
+        admin.purgeQueue(RabbitConfig.UPDATED_VERIFICATION_QUEUE, true);
+    }
+
+    private JsonNode receiveUpdated(long timeoutMs) throws Exception {
+        Message m = rabbit.receive(RabbitConfig.UPDATED_VERIFICATION_QUEUE, timeoutMs);
+        return m == null ? null : mapper.readTree(m.getBody());
+    }
+
+    @Test
+    void oneOrderUpdatedMessageIsPublishedForASuccessfulEdit() throws Exception {
+        long id = placeOrder(ACME);
+        var res = asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MON-27-4K", 4)), ACME);
+        assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        JsonNode msg = receiveUpdated(5_000);
+        assertThat(msg).isNotNull();
+        assertThat(msg.get("orderId").asLong()).isEqualTo(id);
+        assertThat(msg.get("clientId").asLong()).isEqualTo(ACME);
+        assertThat(msg.get("lines")).hasSize(1);
+        assertThat(msg.get("lines").get(0).get("sku").asText()).isEqualTo("MON-27-4K");
+        assertThat(msg.get("lines").get(0).get("quantity").asInt()).isEqualTo(4);
+        assertThat(msg.get("grossCents").asLong()).isEqualTo(res.getBody().get("grossCents").asLong());
+        assertThat(msg.get("discountBp").asInt()).isEqualTo(1000);
+        assertThat(msg.get("netCents").asLong()).isEqualTo(res.getBody().get("netCents").asLong());
+        assertThat(Instant.ofEpochMilli((long) (msg.get("timestamp").asDouble() * 1000)))
+                .isEqualTo(Instant.parse(res.getBody().get("edits").get(0).get("editedAt").asText())
+                        .truncatedTo(java.time.temporal.ChronoUnit.MILLIS));
+        assertThat(receiveUpdated(500)).as("exactly one message").isNull();
+    }
+
+    @Test
+    void nothingIsPublishedForRejectedEdits() throws Exception {
+        long id = placeOrder(ACME);
+        asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("NOPE", 1)), ACME);
+        asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MS-WL-PRO", 0)), ACME);
+        asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MS-WL-PRO", 1)), GLOBEX);
+        advance(id);
+        asClient(HttpMethod.PUT, "/orders/" + id, orderOf(line("MS-WL-PRO", 1)), ACME);
+        assertThat(receiveUpdated(1_000)).isNull();
+    }
+
+    @Test
+    void nothingIsPublishedWhenAnEditTransactionRollsBack() throws Exception {
+        tx.executeWithoutResult(status -> {
+            events.publishEvent(new com.computedeliver.orders.order.OrderUpdatedEvent(
+                    1, ACME, List.of(), 0, 0, 0, Instant.now()));
+            status.setRollbackOnly();
+        });
+        assertThat(receiveUpdated(1_000)).isNull();
     }
 
     private JsonNode receive(long timeoutMs) throws Exception {

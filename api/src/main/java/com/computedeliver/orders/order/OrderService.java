@@ -1,5 +1,6 @@
 package com.computedeliver.orders.order;
 
+import com.computedeliver.orders.order.OrderDtos.EditView;
 import com.computedeliver.orders.order.OrderDtos.HistoryView;
 import com.computedeliver.orders.order.OrderDtos.LineRequest;
 import com.computedeliver.orders.order.OrderDtos.LineView;
@@ -39,33 +40,39 @@ public class OrderService {
     @Transactional
     public OrderView place(Caller caller, PlaceOrderRequest request) {
         caller.requireRole(Role.ENTERPRISE_CLIENT);
-        Client client = referenceData.findClient(caller.requireClientId())
-                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Unknown client"));
-        if (!client.hasContract()) {
-            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
-                    "No contract exists for " + client.getName() + "; orders cannot be placed");
-        }
-        if (request == null || request.lines() == null || request.lines().isEmpty()) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "An order needs at least one line");
-        }
+        Client client = requireContractClient(caller);
+        requireLines(request);
 
         Order order = new Order(client.getId(), client.getDiscountBp(), clock.instant());
-        List<OrderIntakenEvent.Line> eventLines = new ArrayList<>();
-        int lineNo = 0;
-        for (LineRequest line : request.lines()) {
-            lineNo++;
-            int qty = parseQuantity(line, lineNo);
-            Product product = line.sku() == null ? null : referenceData.findProduct(line.sku()).orElse(null);
-            if (product == null) {
-                throw new ApiException(HttpStatus.BAD_REQUEST, "Line " + lineNo + ": unknown SKU " + line.sku());
-            }
-            order.addLine(product.getSku(), qty, product.getUnitPriceCents());
-            eventLines.add(new OrderIntakenEvent.Line(product.getSku(), qty));
-        }
+        List<OrderIntakenEvent.Line> eventLines = addLines(order, request);
 
         Order saved = orders.save(order);
         events.publishEvent(new OrderIntakenEvent(saved.getId(), saved.getClientId(), eventLines,
                 saved.getGrossCents(), saved.getDiscountBp(), saved.getNetCents(), saved.getCreatedAt()));
+        return toView(saved);
+    }
+
+    @Transactional
+    public OrderView edit(Caller caller, long id, PlaceOrderRequest request) {
+        caller.requireRole(Role.ENTERPRISE_CLIENT);
+        Order order = orders.findById(id).orElseThrow(() -> notFound(id));
+        if (order.getClientId() != caller.requireClientId()) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Order " + id + " belongs to a different client");
+        }
+        if (order.getStatus() != OrderStatus.SUBMITTED) {
+            throw new ApiException(HttpStatus.CONFLICT,
+                    "Order " + id + " is " + order.getStatus() + " and can no longer be edited");
+        }
+        Client client = requireContractClient(caller);
+        requireLines(request);
+
+        order.startEdit(client.getDiscountBp(), clock.instant());
+        List<OrderIntakenEvent.Line> eventLines = addLines(order, request);
+
+        Order saved = orders.saveAndFlush(order);
+        Instant editedAt = saved.getEdits().get(saved.getEdits().size() - 1).getEditedAt();
+        events.publishEvent(new OrderUpdatedEvent(saved.getId(), saved.getClientId(), eventLines,
+                saved.getGrossCents(), saved.getDiscountBp(), saved.getNetCents(), editedAt));
         return toView(saved);
     }
 
@@ -107,6 +114,38 @@ public class OrderService {
         return toView(orders.saveAndFlush(order));
     }
 
+    private Client requireContractClient(Caller caller) {
+        Client client = referenceData.findClient(caller.requireClientId())
+                .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Unknown client"));
+        if (!client.hasContract()) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "No contract exists for " + client.getName() + "; orders cannot be placed");
+        }
+        return client;
+    }
+
+    private static void requireLines(PlaceOrderRequest request) {
+        if (request == null || request.lines() == null || request.lines().isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "An order needs at least one line");
+        }
+    }
+
+    private List<OrderIntakenEvent.Line> addLines(Order order, PlaceOrderRequest request) {
+        List<OrderIntakenEvent.Line> eventLines = new ArrayList<>();
+        int lineNo = 0;
+        for (LineRequest line : request.lines()) {
+            lineNo++;
+            int qty = parseQuantity(line, lineNo);
+            Product product = line.sku() == null ? null : referenceData.findProduct(line.sku()).orElse(null);
+            if (product == null) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Line " + lineNo + ": unknown SKU " + line.sku());
+            }
+            order.addLine(product.getSku(), qty, product.getUnitPriceCents());
+            eventLines.add(new OrderIntakenEvent.Line(product.getSku(), qty));
+        }
+        return eventLines;
+    }
+
     private Order loadVisible(Caller caller, long id) {
         Order order = orders.findById(id).orElseThrow(() -> notFound(id));
         if (caller.isClient() && order.getClientId() != caller.requireClientId()) {
@@ -136,6 +175,7 @@ public class OrderService {
         List<HistoryView> history = o.getHistory().stream()
                 .map(h -> new HistoryView(h.getStatus(), h.getChangedAt())).toList();
         return new OrderView(o.getId(), o.getClientId(), clientName, o.getStatus(), o.getGrossCents(),
-                o.getDiscountBp(), o.getNetCents(), o.totalUnits(), o.getCreatedAt(), lines, history);
+                o.getDiscountBp(), o.getNetCents(), o.totalUnits(), o.getCreatedAt(), lines, history,
+                o.getEdits().stream().map(e -> new EditView(e.getEditedAt())).toList());
     }
 }
