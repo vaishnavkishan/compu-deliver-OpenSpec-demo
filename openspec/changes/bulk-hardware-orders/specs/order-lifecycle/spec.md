@@ -50,6 +50,13 @@ The system SHALL use optimistic locking on orders so that concurrent status chan
 - **WHEN** a cancel and an advance are applied concurrently to the same order
 - **THEN** exactly one succeeds and the other is rejected with a conflict error
 
+### Requirement: Edit window closes on first transition
+The system SHALL treat an order as editable only while `SUBMITTED`. Editing SHALL NOT change the order's status.
+
+#### Scenario: Leaving SUBMITTED locks edits
+- **WHEN** an order moves from `SUBMITTED` to `CONFIRMED`
+- **THEN** further edits to the order are rejected
+
 ### Requirement: Transition history
 The system SHALL record a timestamp for every status transition, including the initial `SUBMITTED` status and cancellation, and SHALL make this history visible with the order.
 

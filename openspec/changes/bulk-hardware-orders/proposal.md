@@ -12,10 +12,11 @@ Enterprise clients buy hardware in bulk under pre-negotiated contract discounts,
 - Add an order status lifecycle: `SUBMITTED > CONFIRMED > PROCESSING > SHIPPED > DELIVERED`, advanced one step at a time by a Warehouse Operator through a minimal demo view, with a timestamp recorded per transition.
 - Allow an Enterprise Client to cancel an order only while it is `SUBMITTED` or `CONFIRMED` (instant, no fee). `CANCELLED` and `DELIVERED` are terminal.
 - Allow an Enterprise Client to view their own order history only.
+- Allow an Enterprise Client to edit the lines of their own order only while it is `SUBMITTED` (the Intake step). Pricing is recomputed from the current contract and prices, replacing the snapshot, and an `OrderUpdated` event is published after commit. Once the order leaves `SUBMITTED` it can no longer be edited.
 - Add a role-gated portal shell (no authentication): Enterprise Client (with a second selector for the seeded client) and a minimal Warehouse Operator view (all orders, advance status only) are functional. Invoice Department appears as an unavailable future role.
 - Seed mock data standing in for an external system: clients with discount percentages, and products with unit prices.
 
-**In scope:** Order API and database (intake, pricing, status lifecycle, cancellation, contract terms, history), the RabbitMQ broker, and the Portal UI (Enterprise Client dashboard, order create/detail views, role-gated shell, and a minimal Warehouse Operator queue with an advance button so the demo can progress orders).
+**In scope:** Order API and database (intake, pricing, editing while `SUBMITTED`, status lifecycle, cancellation, contract terms, history), the RabbitMQ broker, and the Portal UI (Enterprise Client dashboard, order create/detail views, role-gated shell, and a minimal Warehouse Operator queue with an advance button so the demo can progress orders).
 
 **Out of scope (future):** a dedicated Warehouse API/DB and the full Operator UI (tagging, shipping, fulfilment); Invoicing API/DB and Staff UI; authentication; asset tagging and shipping logic; a real product catalog or contract system.
 
@@ -26,7 +27,8 @@ Enterprise clients buy hardware in bulk under pre-negotiated contract discounts,
 - `order-intake`: Submitting bulk orders and computing net totals from the client's flat contract discount, snapshotted on the order.
 - `order-lifecycle`: Order statuses, valid forward transitions, terminal states, and per-transition timestamps.
 - `order-history-cancel`: Client-scoped order history and client cancellation rules.
-- `order-events`: Publishing the `OrderIntaken` event to RabbitMQ.
+- `order-events`: Publishing the `OrderIntaken` and `OrderUpdated` events to RabbitMQ.
+- `order-edit`: Client editing of an order's lines while it is `SUBMITTED`.
 
 ### Modified Capabilities
 
@@ -38,4 +40,4 @@ None. The project has no existing specs.
 - Delivery: multi-stage Docker images and a Helm chart for k3s / Rancher Desktop.
 - Testing: JUnit 5, Mockito, AssertJ and Testcontainers on the backend; Vitest and React Testing Library on the frontend.
 - The catalog and contracts are mocked locally as seed data.
-- The UI must match the Enterprise Client mockups in `figma-designs/` (layout, styling, status colors, flows). Mockup-only features such as asset tagging, invoicing and order editing remain out of scope, as does the Invoice mockup. The Warehouse mockup is followed only for the queue table, search and badges.
+- The UI must match the Enterprise Client mockups in `figma-designs/` (layout, styling, status colors, flows). Mockup-only features such as asset tagging and invoicing remain out of scope, as does the Invoice mockup. The Warehouse mockup is followed only for the queue table, search and badges.

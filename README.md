@@ -152,6 +152,16 @@ To save context tokens, you can apply one task group at a time by naming it in t
 /opsx:apply implement all tasks under 1 @tasks.md
 ```
 
+### 4. Update after implementation (`/opsx:update`, branch 04-update-improvements)
+
+Even after the change is fully implemented, `/opsx:update` can fold a new requirement back into the
+planning artifacts. It never edits code: it proposes revisions across the proposal, specs, design and
+tasks, and adds new unchecked tasks, so a later `/opsx:apply` carries only the delta into code.
+
+```
+/opsx:update The order should be allowed to be edited. Edit is only allowed when the order is in Intake stage.
+```
+
 ## Run locally (development)
 
 Requires Java 25, Maven, Node.js 20+ and Docker.

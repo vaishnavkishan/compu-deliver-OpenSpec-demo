@@ -23,3 +23,14 @@ The system SHALL publish the event only after the order transaction has committe
 #### Scenario: Rollback emits nothing
 - **WHEN** the order transaction rolls back after the order was built
 - **THEN** no `OrderIntaken` message is published
+
+### Requirement: Publish OrderUpdated
+The system SHALL publish an `OrderUpdated` event to RabbitMQ, only after the transaction has committed, for each successful edit of a `SUBMITTED` order. The event SHALL contain the order id, client id, the new lines (SKU and quantity), gross, discount percentage, net, and the edit timestamp.
+
+#### Scenario: Event on successful edit
+- **WHEN** a client's edit of a `SUBMITTED` order is accepted
+- **THEN** one `OrderUpdated` message with the order's new lines and pricing snapshot is published
+
+#### Scenario: No event for rejected edit
+- **WHEN** an edit is rejected or its transaction rolls back
+- **THEN** no `OrderUpdated` message is published

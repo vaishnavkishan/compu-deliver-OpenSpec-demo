@@ -58,3 +58,10 @@ Reference: the Enterprise Client mockups in `figma-designs/` and the "UI/UX Refe
 
 - [x] 10.1 Run the full flow end to end on the deployed stack (place, see `OrderIntaken` on the queue, cancel, place, switch to Warehouse Operator and advance to DELIVERED, then view the history as the client) and verify behavior matches every scenario in the five specs
 - [x] 10.2 Add run and deploy instructions and the seeded clients' discounts to the README; verify a fresh clone can follow them to a working app
+
+## 11. Edit order while SUBMITTED
+
+- [ ] 11.1 Add a Flyway migration for `order_edits` and implement `PUT /orders/{id}` (client only, own orders only, status `SUBMITTED` only, intake validation, pricing and line prices recomputed from current contract and prices, edit row recorded); verify API tests for each scenario in the order-edit spec
+- [ ] 11.2 Publish `OrderUpdated` (routing key `order.updated`) from an `AFTER_COMMIT` listener and bind a verification queue; verify tests for one message on success, none for rejected edits, and none on rollback
+- [ ] 11.3 Verify an edit racing with advance or cancel yields one success and one 409, and that advancing to `CONFIRMED` makes later edits fail
+- [ ] 11.4 Add the "Edit Order" button (only on `SUBMITTED` orders), prefilled editable form and "Save Changes" in the order page, and show edit timestamps in the history; verify with RTL tests that the button is absent for other statuses and that API errors show as toasts

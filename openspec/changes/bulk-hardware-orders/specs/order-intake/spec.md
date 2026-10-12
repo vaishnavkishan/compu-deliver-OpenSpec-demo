@@ -48,7 +48,7 @@ The system SHALL reject an order from a client that has no contract discount on 
 - **THEN** the order is rejected with an error stating no contract exists and no order is created
 
 ### Requirement: Pricing snapshot
-The system SHALL store the gross, discount percentage, and net on the order at intake, and SHALL NOT change them when client contracts or product prices change afterward.
+The system SHALL store the gross, discount percentage, and net on the order at intake, and SHALL NOT change them when client contracts or product prices change afterward. The only exception is an edit of a `SUBMITTED` order (see `order-edit`), which replaces the snapshot.
 
 #### Scenario: Contract changes after order
 - **WHEN** a client's discount percentage changes after an order was placed
