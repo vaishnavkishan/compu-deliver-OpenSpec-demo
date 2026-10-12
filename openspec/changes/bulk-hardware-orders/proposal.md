@@ -2,27 +2,31 @@
 
 ## Why
 
-Enterprise clients buy hardware in bulk under pre-negotiated contract discounts, and there is no system to accept those orders, compute the correct net total, or show where an order stands. This demo app establishes the core order flow: intake with contract pricing, warehouse-driven lifecycle tracking, and client self-service history and cancellation.
+Enterprise clients buy hardware in bulk under pre-negotiated contract discounts, and there is no system to accept those orders, compute the correct net total, or show where an order stands. This change establishes the client-facing order flow: intake with contract pricing, a status lifecycle, client self-service history and cancellation, and an `OrderIntaken` event so downstream systems (warehouse, invoicing) can be built later.
 
 ## What Changes
 
 - Add order intake: an Enterprise Client submits an order of SKU + quantity lines; the system computes gross, applies the client's flat contract discount percentage, and stores `gross`, `discount_pct`, and `net` as a snapshot on the order.
 - Reject orders from clients that have no contract.
-- Add an order lifecycle: `SUBMITTED > CONFIRMED > PROCESSING > SHIPPED > DELIVERED`, advanced forward one step at a time by a Warehouse Operator, with a timestamp recorded per transition.
+- Publish an `OrderIntaken` event to RabbitMQ after an order is successfully committed.
+- Add an order status lifecycle: `SUBMITTED > CONFIRMED > PROCESSING > SHIPPED > DELIVERED`, advanced one step at a time by a Warehouse Operator through a minimal demo view, with a timestamp recorded per transition.
 - Allow an Enterprise Client to cancel an order only while it is `SUBMITTED` or `CONFIRMED` (instant, no fee). `CANCELLED` and `DELIVERED` are terminal.
 - Allow an Enterprise Client to view their own order history only.
-- Add a role selector (no authentication): Enterprise Client (with a second selector for the seeded client), Warehouse Operator, and Invoice Department. Invoice Department gets a read-only view of all orders with no actions.
+- Add a role-gated portal shell (no authentication): Enterprise Client (with a second selector for the seeded client) and a minimal Warehouse Operator view (all orders, advance status only) are functional. Invoice Department appears as an unavailable future role.
 - Seed mock data standing in for an external system: clients with discount percentages, and products with unit prices.
 
-Out of scope: authentication, asset tagging and shipping UI/logic, invoicing, and a real product catalog or contract system.
+**In scope:** Order API and database (intake, pricing, status lifecycle, cancellation, contract terms, history), the RabbitMQ broker, and the Portal UI (Enterprise Client dashboard, order create/detail views, role-gated shell, and a minimal Warehouse Operator queue with an advance button so the demo can progress orders).
+
+**Out of scope (future):** a dedicated Warehouse API/DB and the full Operator UI (tagging, shipping, fulfilment); Invoicing API/DB and Staff UI; authentication; asset tagging and shipping logic; a real product catalog or contract system.
 
 ## Capabilities
 
 ### New Capabilities
-- `role-selection`: Choosing the active role (and client, for Enterprise Client) without authentication, and the views and actions each role has.
+- `role-selection`: Role-gated portal shell: choosing the active role (and client, for Enterprise Client) without authentication.
 - `order-intake`: Submitting bulk orders and computing net totals from the client's flat contract discount, snapshotted on the order.
-- `order-lifecycle`: Order statuses, valid forward transitions by the Warehouse Operator, terminal states, and per-transition timestamps.
+- `order-lifecycle`: Order statuses, valid forward transitions, terminal states, and per-transition timestamps.
 - `order-history-cancel`: Client-scoped order history and client cancellation rules.
+- `order-events`: Publishing the `OrderIntaken` event to RabbitMQ.
 
 ### Modified Capabilities
 
@@ -30,6 +34,8 @@ None. The project has no existing specs.
 
 ## Impact
 
-- Greenfield: no existing application code. This introduces the whole demo app (UI, order logic, persistence) plus seed data for clients, discounts, and products.
-- Tech stack is not yet decided; it will be chosen in design.
-- No external dependencies or integrations; the catalog and contracts are mocked locally.
+- Greenfield: no existing application code. This introduces the Order API (Java 25, Spring Boot 3.5, Maven, Flyway, springdoc-openapi), PostgreSQL 17 persistence with `@Version` optimistic locking, a RabbitMQ broker, and a React 19 + TypeScript + Vite + Tailwind portal.
+- Delivery: multi-stage Docker images and a Helm chart for k3s / Rancher Desktop.
+- Testing: JUnit 5, Mockito, AssertJ and Testcontainers on the backend; Vitest and React Testing Library on the frontend.
+- The catalog and contracts are mocked locally as seed data.
+- The UI must match the Enterprise Client mockups in `figma-designs/` (layout, styling, status colors, flows). Mockup-only features such as asset tagging, invoicing and order editing remain out of scope, as does the Invoice mockup. The Warehouse mockup is followed only for the queue table, search and badges.

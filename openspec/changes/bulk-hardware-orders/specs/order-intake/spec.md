@@ -53,3 +53,18 @@ The system SHALL store the gross, discount percentage, and net on the order at i
 #### Scenario: Contract changes after order
 - **WHEN** a client's discount percentage changes after an order was placed
 - **THEN** the existing order still shows its original gross, discount percentage, and net
+
+### Requirement: Order form layout
+The system SHALL present the new-order page as in `figma-designs/enterprise-user-detail-page.html`: an "Order Line Items" table where each row has a searchable product picker (matching SKU or name, with a "No matching products found" state), unit price, a quantity input with minimum 1, a subtotal, and a remove control, plus buttons to add a line. A sticky "Contract Net Pricing" panel SHALL show total units, gross, contract discount with its percentage, "Logistics & Freight: Waived", and the net total, updating as lines change.
+
+#### Scenario: Search and select product
+- **WHEN** the user types part of a SKU or product name in a line's picker
+- **THEN** matching products are listed with name, SKU, and price, and choosing one fills the row
+
+#### Scenario: Totals update live
+- **WHEN** the user changes a quantity or removes a line
+- **THEN** the line subtotal and the pricing panel update immediately
+
+#### Scenario: Submit feedback
+- **WHEN** an order is submitted, or rejected with an error
+- **THEN** a toast at bottom-right shows the outcome and fades after about 3 seconds
