@@ -11,9 +11,10 @@ TLDR;
 
 ```mermaid
 graph LR
-    A["\explore & \propose (new req)"] --> B["\propose (edits)"] --> C["\apply"] --> D["\sync"] --> E["\archive"]
+    A["\explore & \propose (new req)"] --> B["\propose (edits)"] --> U["\update (optional)"] --> C["\apply"] --> D["\sync"] --> E["\archive"]
 
     style A fill:#e1f5ff
+    style U stroke-dasharray: 5 5
 ```
 
 ## Prerequisites (branch name 00-openspec-initialize)
