@@ -7,6 +7,8 @@ breakdown, and implementation.
 Read top to bottom — each step below corresponds to one branch, so you can follow the git history
 alongside the writeup. Every step includes the raw slash-command prompt used.
 
+Models used: Sonnet 5.5 & Haiku 4.5
+
 TLDR;
 
 ```mermaid
@@ -25,8 +27,6 @@ graph LR
     D --> E["6. archive"]
 
     style NEW fill:none,stroke:#555,stroke-width:2px,stroke-dasharray: 5 5
-    style A fill:#e1f5ff
-    style B fill:#e1f5ff
     style U stroke-dasharray: 5 5
     style V stroke-dasharray: 5 5
 ```
